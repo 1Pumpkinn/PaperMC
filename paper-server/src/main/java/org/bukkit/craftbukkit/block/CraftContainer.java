@@ -1,9 +1,11 @@
 package org.bukkit.craftbukkit.block;
 
+import java.util.Collections;
+import java.util.Optional;
 import net.minecraft.advancements.criterion.DataComponentMatchers;
 import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.core.component.DataComponentExactPredicate;
-import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.LockCode;
@@ -32,22 +34,18 @@ public abstract class CraftContainer<T extends BaseContainerBlockEntity> extends
 
     @Override
     public String getLock() {
-        Component customName = this.getSnapshot().lockKey.predicate().components().exact().asPatch().get(DataComponentMap.EMPTY, DataComponents.CUSTOM_NAME);
-        return (customName != null) ? CraftChatMessage.fromComponent(customName) : "";
+        Optional<? extends Component> customName = this.getSnapshot().lockKey.predicate().components().exact().asPatch().get(DataComponents.CUSTOM_NAME);
+
+        return (customName != null) ? customName.map(CraftChatMessage::fromComponent).orElse("") : "";
     }
 
     @Override
     public void setLock(String key) {
-        if (key == null || key.isEmpty()) {
+        if (key == null) {
             this.getSnapshot().lockKey = LockCode.NO_LOCK;
         } else {
-            this.getSnapshot().lockKey = new LockCode(ItemPredicate.Builder.item().withComponents(
-                DataComponentMatchers.Builder.components().exact(
-                    DataComponentExactPredicate.builder().expect(
-                        DataComponents.CUSTOM_NAME, CraftChatMessage.fromString(key)[0]
-                    ).build()
-                ).build()
-            ).build());
+            DataComponentExactPredicate predicate = DataComponentExactPredicate.builder().expect(DataComponents.CUSTOM_NAME, CraftChatMessage.fromStringOrNull(key)).build();
+            this.getSnapshot().lockKey = new LockCode(new ItemPredicate(Optional.empty(), MinMaxBounds.Ints.ANY, new DataComponentMatchers(predicate, Collections.emptyMap())));
         }
     }
 

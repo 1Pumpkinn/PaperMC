@@ -26,7 +26,7 @@ public class CraftFallingBlock extends CraftEntity implements FallingBlock {
 
     @Override
     public BlockData getBlockData() {
-        return this.getHandle().getBlockState().asBlockData();
+        return CraftBlockData.fromData(this.getHandle().getBlockState());
     }
 
     @Override

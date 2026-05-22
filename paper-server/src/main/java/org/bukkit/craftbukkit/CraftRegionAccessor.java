@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
@@ -14,15 +15,15 @@ import net.minecraft.data.worldgen.features.TreeFeatures;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.SpawnGroupData;
-import net.minecraft.world.level.MoonPhase;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.ChorusFlowerBlock;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.portal.TeleportTransition;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.RegionAccessor;
@@ -79,12 +80,12 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
     @Override
     public void setBiome(int x, int y, int z, Biome biome) {
-        Holder<net.minecraft.world.level.biome.Biome> b = CraftBiome.bukkitToMinecraftHolder(biome);
-        Preconditions.checkArgument(b != null, "Cannot set the biome to %s", biome);
-        this.setBiome(x, y, z, b);
+        Preconditions.checkArgument(biome != Biome.CUSTOM, "Cannot set the biome to %s", biome);
+        Holder<net.minecraft.world.level.biome.Biome> biomeBase = CraftBiome.bukkitToMinecraftHolder(biome);
+        this.setBiome(x, y, z, biomeBase);
     }
 
-    public abstract void setBiome(int x, int y, int z, Holder<net.minecraft.world.level.biome.Biome> biome);
+    public abstract void setBiome(int x, int y, int z, Holder<net.minecraft.world.level.biome.Biome> biomeBase);
 
     @Override
     public BlockState getBlockState(int x, int y, int z) {
@@ -98,7 +99,7 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
     @Override
     public BlockData getBlockData(int x, int y, int z) {
-        return this.getData(x, y, z).asBlockData();
+        return CraftBlockData.fromData(this.getData(x, y, z));
     }
 
     @Override
@@ -141,7 +142,7 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
     @Override
     public boolean generateTree(Location location, Random random, TreeType treeType) {
-        BlockPos pos = CraftLocation.toBlockPos(location);
+        BlockPos pos = CraftLocation.toBlockPosition(location);
         return this.generateTree(this.getHandle(), this.getHandle().getMinecraftWorld().getChunkSource().getGenerator(), pos, new RandomSourceWrapper(random), treeType);
     }
 
@@ -155,10 +156,10 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
     @Override
     public boolean generateTree(Location location, Random random, TreeType treeType, Predicate<? super BlockState> predicate) {
-        BlockPos pos = CraftLocation.toBlockPos(location);
+        BlockPos pos = CraftLocation.toBlockPosition(location);
         BlockStateListPopulator populator = new BlockStateListPopulator(this.getHandle());
         boolean result = this.generateTree(populator, this.getHandle().getMinecraftWorld().getChunkSource().getGenerator(), pos, new RandomSourceWrapper(random), treeType);
-        populator.placeSomeBlocks(predicate == null ? (_ -> true) : predicate);
+        populator.placeSomeBlocks(predicate == null ? ($ -> true) : predicate);
         return result;
     }
 
@@ -465,8 +466,7 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
     @Override
     public io.papermc.paper.world.MoonPhase getMoonPhase() {
-        final MoonPhase moonPhase = this.getHandle().getLevel().environmentAttributes().getDimensionValue(EnvironmentAttributes.MOON_PHASE);
-        return io.papermc.paper.world.MoonPhase.values()[moonPhase.ordinal()];
+        return io.papermc.paper.world.MoonPhase.getPhase(this.getHandle().getLevel().getDayTime() / SharedConstants.TICKS_PER_GAME_DAY);
     }
 
     @Override
@@ -483,7 +483,7 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
         net.minecraft.world.phys.Vec3 start = new net.minecraft.world.phys.Vec3(from.getX(), from.getY(), from.getZ());
         net.minecraft.world.phys.Vec3 end = new net.minecraft.world.phys.Vec3(to.getX(), to.getY(), to.getZ());
-        if (end.distanceToSqr(start) > Mth.square(128.0)) {
+        if (end.distanceToSqr(start) > Mth.square(128D)) {
             return false; // Return early if the distance is greater than 128 blocks
         }
 

@@ -17,7 +17,6 @@ public class PaperChickenVariantRegistryEntry implements ChickenVariantRegistryE
 
     protected ChickenVariant.@Nullable ModelType model;
     protected ClientAsset.@Nullable ResourceTexture clientTextureAsset;
-    protected ClientAsset.@Nullable ResourceTexture babyClientTextureAsset;
     protected SpawnPrioritySelectors spawnConditions;
 
     protected final Conversions conversions;
@@ -33,7 +32,6 @@ public class PaperChickenVariantRegistryEntry implements ChickenVariantRegistryE
         }
 
         this.clientTextureAsset = internal.modelAndTexture().asset();
-        this.babyClientTextureAsset = internal.babyTexture();
         this.model = internal.modelAndTexture().model();
         this.spawnConditions = internal.spawnConditions();
     }
@@ -41,11 +39,6 @@ public class PaperChickenVariantRegistryEntry implements ChickenVariantRegistryE
     @Override
     public ClientTextureAsset clientTextureAsset() {
         return this.conversions.asBukkit(asConfigured(this.clientTextureAsset, "clientTextureAsset"));
-    }
-
-    @Override
-    public ClientTextureAsset babyClientTextureAsset() {
-        return this.conversions.asBukkit(asConfigured(this.babyClientTextureAsset, "babyClientTextureAsset"));
     }
 
     @Override
@@ -69,12 +62,6 @@ public class PaperChickenVariantRegistryEntry implements ChickenVariantRegistryE
         }
 
         @Override
-        public Builder babyClientTextureAsset(final ClientTextureAsset babyClientTextureAsset) {
-            this.babyClientTextureAsset = this.conversions.asVanilla(asArgument(babyClientTextureAsset, "babyClientTextureAsset"));
-            return this;
-        }
-
-        @Override
         public Builder model(final Model model) {
             this.model = switch (asArgument(model, "model")) {
                 case NORMAL -> ChickenVariant.ModelType.NORMAL;
@@ -87,7 +74,6 @@ public class PaperChickenVariantRegistryEntry implements ChickenVariantRegistryE
         public ChickenVariant build() {
             return new ChickenVariant(
                 new ModelAndTexture<>(asConfigured(this.model, "model"), asConfigured(this.clientTextureAsset, "clientTextureAsset")),
-                asConfigured(this.babyClientTextureAsset, "babyClientTextureAsset"),
                 asConfigured(this.spawnConditions, "spawnConditions")
             );
         }

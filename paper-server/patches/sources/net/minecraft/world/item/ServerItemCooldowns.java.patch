@@ -30,24 +30,24 @@
 +    }
 +
 +    @Override
-+    public void addCooldown(Identifier cooldownGroup, int time, boolean callEvent) {
++    public void addCooldown(Identifier groupId, int duration, boolean callEvent) {
 +        if (callEvent) {
 +            final io.papermc.paper.event.player.PlayerItemGroupCooldownEvent event = new io.papermc.paper.event.player.PlayerItemGroupCooldownEvent(
 +                this.player.getBukkitEntity(),
-+                org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(cooldownGroup),
-+                time
++                org.bukkit.craftbukkit.util.CraftNamespacedKey.fromMinecraft(groupId),
++                duration
 +            );
 +            if (!event.callEvent()) {
-+                this.player.connection.send(new ClientboundCooldownPacket(cooldownGroup, this.getCurrentCooldown(cooldownGroup)));
++                this.player.connection.send(new ClientboundCooldownPacket(groupId, this.getCurrentCooldown(groupId)));
 +                return;
 +            }
 +
-+            time = event.getCooldown();
++            duration = event.getCooldown();
 +        }
-+        super.addCooldown(cooldownGroup, time, false);
++        super.addCooldown(groupId, duration, false);
 +    }
 +    // Paper end - Add PlayerItemCooldownEvent
 +
      @Override
-     protected void onCooldownStarted(final Identifier cooldownGroup, final int duration) {
-         super.onCooldownStarted(cooldownGroup, duration);
+     protected void onCooldownStarted(Identifier group, int cooldown) {
+         super.onCooldownStarted(group, cooldown);

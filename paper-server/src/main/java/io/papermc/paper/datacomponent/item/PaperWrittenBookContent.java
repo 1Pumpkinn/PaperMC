@@ -17,7 +17,6 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import static io.papermc.paper.adventure.PaperAdventure.asAdventure;
 import static io.papermc.paper.adventure.PaperAdventure.asVanilla;
-import static io.papermc.paper.util.BoundChecker.requireRange;
 
 public record PaperWrittenBookContent(
     net.minecraft.world.item.component.WrittenBookContent impl
@@ -117,7 +116,13 @@ public record PaperWrittenBookContent(
 
         @Override
         public WrittenBookContent.Builder generation(final int generation) {
-            this.generation = requireRange(generation, "generation", 0, net.minecraft.world.item.component.WrittenBookContent.MAX_GENERATION);
+            Preconditions.checkArgument(
+                generation >= 0 && generation <= net.minecraft.world.item.component.WrittenBookContent.MAX_GENERATION,
+                "generation must be between %s and %s, was %s",
+                0, net.minecraft.world.item.component.WrittenBookContent.MAX_GENERATION,
+                generation
+            );
+            this.generation = generation;
             return this;
         }
 

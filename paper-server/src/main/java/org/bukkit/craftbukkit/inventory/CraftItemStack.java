@@ -1,30 +1,32 @@
 package org.bukkit.craftbukkit.inventory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import io.papermc.paper.adventure.PaperAdventure;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import net.kyori.adventure.text.Component;
 import net.minecraft.advancements.criterion.DataComponentMatchers;
 import net.minecraft.advancements.criterion.ItemPredicate;
+import net.minecraft.advancements.criterion.MinMaxBounds;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponentExactPredicate;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.component.PatchedDataComponentMap;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
-import org.bukkit.craftbukkit.CraftRegistry;
 import org.bukkit.craftbukkit.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.util.CraftMagicNumbers;
@@ -34,7 +36,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 @DelegateDeserialization(ItemStack.class)
 public final class CraftItemStack extends ItemStack {
@@ -90,8 +91,8 @@ public final class CraftItemStack extends ItemStack {
         // Paper end - re-implement after delegating all api ItemStack calls to CraftItemStack
     }
 
-    public static net.minecraft.world.item.ItemStack getOrCloneOnMutation(ItemStack initial, ItemStack current) {
-        return initial == current ? unwrap(initial) : asNMSCopy(current);
+    public static net.minecraft.world.item.ItemStack getOrCloneOnMutation(ItemStack old, ItemStack newInstance) {
+        return old == newInstance ? unwrap(old) : asNMSCopy(newInstance);
     }
     // Paper end - MC Utils
 
@@ -102,7 +103,7 @@ public final class CraftItemStack extends ItemStack {
     }
     // Paper end - override isEmpty to use vanilla's impl
 
-    public static net.minecraft.world.item.ItemStack asNMSCopy(@Nullable ItemStack original) {
+    public static net.minecraft.world.item.ItemStack asNMSCopy(ItemStack original) {
         // Paper start - re-implement after delegating all api ItemStack calls to CraftItemStack
         if (original == null || original.isEmpty()) {
             return net.minecraft.world.item.ItemStack.EMPTY;
@@ -120,10 +121,6 @@ public final class CraftItemStack extends ItemStack {
         return items;
     }
 
-    public static ItemStackTemplate asTemplate(ItemStack bukkit) {
-        return net.minecraft.world.item.ItemStackTemplate.fromNonEmptyStack(asNMSCopy(bukkit));
-    }
-
     public static net.minecraft.world.item.ItemStack copyNMSStack(net.minecraft.world.item.ItemStack original, int amount) {
         net.minecraft.world.item.ItemStack stack = original.copy();
         stack.setCount(amount);
@@ -134,13 +131,10 @@ public final class CraftItemStack extends ItemStack {
      * Copies the NMS stack to return as a strictly-Bukkit stack
      */
     public static ItemStack asBukkitCopy(net.minecraft.world.item.ItemStack original) {
-        // no such thing as a "strictly-Bukkit stack" anymore
+        // Paper start - no such thing as a "strictly-Bukkit stack" anymore
         // we copy the stack since it should be a complete copy not a mirror
         return asCraftMirror(original.copy());
-    }
-
-    public static ItemStack asBukkitCopy(net.minecraft.world.item.ItemStackTemplate original) {
-        return asBukkitCopy(original.create());
+        // Paper end
     }
 
     public static CraftItemStack asCraftMirror(net.minecraft.world.item.ItemStack original) {
@@ -163,21 +157,18 @@ public final class CraftItemStack extends ItemStack {
         return new CraftItemStack(CraftItemType.minecraftToBukkit(item), amount, (short) 0, null);
     }
 
-    public static ItemPredicate asCriterionConditionItem(ItemStack key) {
-        net.minecraft.world.item.ItemStack item = CraftItemStack.unwrap(key);
+    public static ItemPredicate asCriterionConditionItem(ItemStack original) {
+        net.minecraft.world.item.ItemStack nms = CraftItemStack.asNMSCopy(original);
+        DataComponentExactPredicate predicate = DataComponentExactPredicate.allOf(PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, nms.getComponentsPatch()));
 
-        return ItemPredicate.Builder.item()
-            .of(CraftRegistry.getMinecraftRegistry(Registries.ITEM), item.getItem())
-            .withComponents(DataComponentMatchers.Builder.components()
-                .exact(DataComponentExactPredicate.allOf(
-                    PatchedDataComponentMap.fromPatch(DataComponentMap.EMPTY, item.getComponentsPatch())
-                ))
-                .build())
-            .build();
+        return new ItemPredicate(Optional.of(HolderSet.direct(nms.getItemHolder())), MinMaxBounds.Ints.ANY, new DataComponentMatchers(predicate, Collections.emptyMap()));
     }
 
     public net.minecraft.world.item.ItemStack handle;
 
+    /**
+     * Mirror
+     */
     private CraftItemStack(net.minecraft.world.item.ItemStack item) {
         this.handle = item;
     }
@@ -358,8 +349,8 @@ public final class CraftItemStack extends ItemStack {
         if (oldMeta == null) {
             newMeta = getItemMeta(this.handle);
         } else {
-            final java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledComponents = new java.util.HashSet<>(CraftMetaItem.getTopLevelHandledComponents(oldMeta.getClass()));
-            newMeta = getItemMeta(this.handle, CraftItemType.minecraftToBukkitNew(this.handle.getItem()), extraHandledComponents);
+            final java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledDcts = new java.util.HashSet<>(CraftMetaItem.getTopLevelHandledDcts(oldMeta.getClass()));
+            newMeta = getItemMeta(this.handle, CraftItemType.minecraftToBukkitNew(this.handle.getItem()), extraHandledDcts);
         }
         this.setItemMeta(newMeta);
     }
@@ -386,14 +377,14 @@ public final class CraftItemStack extends ItemStack {
         // Paper start - handled tags on type change
         return getItemMeta(item, metaForType, null);
     }
-    public static ItemMeta getItemMeta(net.minecraft.world.item.ItemStack item, org.bukkit.inventory.ItemType metaForType, final java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledComponents) {
+    public static ItemMeta getItemMeta(net.minecraft.world.item.ItemStack item, org.bukkit.inventory.ItemType metaForType, final java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledDcts) {
         // Paper end - handled tags on type change
         if (!CraftItemStack.hasItemMeta(item)) {
             return CraftItemFactory.instance().getItemMeta(CraftItemStack.getType(item));
         }
 
-        if (metaForType != null) { return ((CraftItemType<?>) metaForType).getItemMeta(item, extraHandledComponents); } // Paper
-        return ((CraftItemType<?>) CraftItemType.minecraftToBukkitNew(item.getItem())).getItemMeta(item, extraHandledComponents); // Paper
+        if (metaForType != null) { return ((CraftItemType<?>) metaForType).getItemMeta(item, extraHandledDcts); } // Paper
+        return ((CraftItemType<?>) CraftItemType.minecraftToBukkitNew(item.getItem())).getItemMeta(item, extraHandledDcts); // Paper
     }
 
     static Material getType(net.minecraft.world.item.ItemStack item) {

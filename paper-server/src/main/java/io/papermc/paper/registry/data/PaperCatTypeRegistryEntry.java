@@ -15,7 +15,6 @@ import static io.papermc.paper.registry.data.util.Checks.asConfigured;
 public class PaperCatTypeRegistryEntry implements CatTypeRegistryEntry {
 
     protected ClientAsset.@Nullable ResourceTexture clientTextureAsset;
-    protected ClientAsset.@Nullable ResourceTexture babyClientTextureAsset;
     protected SpawnPrioritySelectors spawnConditions;
 
     protected final Conversions conversions;
@@ -30,19 +29,13 @@ public class PaperCatTypeRegistryEntry implements CatTypeRegistryEntry {
             return;
         }
 
-        this.clientTextureAsset = internal.assetInfo(false);
-        this.babyClientTextureAsset = internal.assetInfo(true);
+        this.clientTextureAsset = internal.assetInfo();
         this.spawnConditions = internal.spawnConditions();
     }
 
     @Override
     public ClientTextureAsset clientTextureAsset() {
         return this.conversions.asBukkit(asConfigured(this.clientTextureAsset, "clientTextureAsset"));
-    }
-
-    @Override
-    public ClientTextureAsset babyClientTextureAsset() {
-        return this.conversions.asBukkit(asConfigured(this.babyClientTextureAsset, "babyClientTextureAsset"));
     }
 
     public static final class PaperBuilder extends PaperCatTypeRegistryEntry implements Builder, PaperRegistryBuilder<CatVariant, Cat.Type> {
@@ -58,16 +51,9 @@ public class PaperCatTypeRegistryEntry implements CatTypeRegistryEntry {
         }
 
         @Override
-        public Builder babyClientTextureAsset(final ClientTextureAsset babyClientTextureAsset) {
-            this.babyClientTextureAsset = this.conversions.asVanilla(asArgument(babyClientTextureAsset, "babyClientTextureAsset"));
-            return this;
-        }
-
-        @Override
         public CatVariant build() {
             return new CatVariant(
                 asConfigured(this.clientTextureAsset, "clientTextureAsset"),
-                asConfigured(this.babyClientTextureAsset, "babyClientTextureAsset"),
                 asConfigured(this.spawnConditions, "spawnConditions")
             );
         }

@@ -2,17 +2,16 @@ package org.bukkit.craftbukkit.inventory;
 
 import com.google.common.collect.ImmutableMap.Builder;
 import com.mojang.authlib.GameProfile;
-import com.mojang.datafixers.util.Either;
 import java.util.Map;
 import java.util.Objects;
+import com.mojang.datafixers.util.Either;
+import net.minecraft.util.Util;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Util;
 import net.minecraft.world.entity.player.PlayerSkin;
 import net.minecraft.world.item.component.ResolvableProfile;
 import org.bukkit.Bukkit;
@@ -51,12 +50,12 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
         this.noteBlockSound = skullMeta.noteBlockSound;
     }
 
-    CraftMetaSkull(DataComponentPatch patch, java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledComponents) {
-        super(patch, extraHandledComponents);
+    CraftMetaSkull(DataComponentPatch tag, java.util.Set<net.minecraft.core.component.DataComponentType<?>> extraHandledDcts) {
+        super(tag, extraHandledDcts);
 
-        getOrEmpty(patch, CraftMetaSkull.SKULL_PROFILE).ifPresent(this::setProfile);
+        getOrEmpty(tag, CraftMetaSkull.SKULL_PROFILE).ifPresent(this::setProfile);
 
-        getOrEmpty(patch, CraftMetaSkull.NOTE_BLOCK_SOUND).ifPresent((noteBlockSound) -> this.noteBlockSound = noteBlockSound);
+        getOrEmpty(tag, CraftMetaSkull.NOTE_BLOCK_SOUND).ifPresent((noteBlockSound) -> this.noteBlockSound = noteBlockSound);
     }
 
     CraftMetaSkull(Map<String, Object> map) {
@@ -115,7 +114,7 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
                 ownerProfile.update().thenAcceptAsync((filledProfile) -> { // Paper - run on main thread
                     this.setOwnerProfile(filledProfile);
                     tag.skullCallback(this.profile); // Paper - actually set profile on itemstack
-                }, MinecraftServer.getServer()); // Paper - run on main thread
+                }, ((org.bukkit.craftbukkit.CraftServer) org.bukkit.Bukkit.getServer()).getServer()); // Paper - run on main thread
             }
         }
 
@@ -150,13 +149,13 @@ class CraftMetaSkull extends CraftMetaItem implements SkullMeta {
 
     @Override
     public void setPlayerProfile(com.destroystokyo.paper.profile.@Nullable PlayerProfile profile) {
-        this.setProfile((profile == null) ? null : com.destroystokyo.paper.profile.CraftPlayerProfile.asResolvableProfileCopy(profile));
+        setProfile((profile == null) ? null : com.destroystokyo.paper.profile.CraftPlayerProfile.asResolvableProfileCopy(profile));
     }
 
     @Nullable
     @Override
     public com.destroystokyo.paper.profile.PlayerProfile getPlayerProfile() {
-        return this.profile != null ? new com.destroystokyo.paper.profile.CraftPlayerProfile(this.profile) : null;
+        return profile != null ? new com.destroystokyo.paper.profile.CraftPlayerProfile(profile) : null;
     }
 
     @Override

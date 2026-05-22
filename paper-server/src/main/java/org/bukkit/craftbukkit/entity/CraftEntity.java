@@ -909,7 +909,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
 
     @Override
     public Set<String> getScoreboardTags() {
-        return this.getHandle().entityTags();
+        return this.getHandle().getTags();
     }
 
     @Override

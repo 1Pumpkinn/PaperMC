@@ -47,10 +47,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: JDK 25
+      - name: JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: 25
+          java-version: 21
           distribution: 'zulu'
 
       - name: Setup Gradle
@@ -115,14 +115,14 @@ jobs:
 
       - name: Create Paperclip Jar
         if: fromJSON(steps.determine.outputs.result).action == 'paperclip'
-        run: ./gradlew createPaperclipJar --stacktrace
+        run: ./gradlew createMojmapPaperclipJar --stacktrace
 
       - name: Upload Paperclip Jar
         if: fromJSON(steps.determine.outputs.result).action == 'paperclip'
         uses: actions/upload-artifact@v4
         with:
           name: paper-${{ fromJSON(steps.determine.outputs.result).pr }}
-          path: paper-server/build/libs/paper-paperclip-*.jar
+          path: paper-server/build/libs/paper-paperclip-*-mojmap.jar
 
       - name: Publish Artifacts
         if: fromJSON(steps.determine.outputs.result).action == 'paperclip'

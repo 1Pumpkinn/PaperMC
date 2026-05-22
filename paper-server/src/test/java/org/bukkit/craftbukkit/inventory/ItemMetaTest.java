@@ -46,6 +46,7 @@ import org.bukkit.inventory.meta.KnowledgeBookMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SpawnEggMeta;
 import org.bukkit.inventory.meta.TropicalFishBucketMeta;
 import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.inventory.meta.trim.TrimMaterial;
@@ -429,8 +430,8 @@ public class ItemMetaTest {
     @Test
     public void testBlockData() {
         BlockDataMeta itemMeta = (BlockDataMeta) Bukkit.getItemFactory().getItemMeta(Material.CHEST);
-        itemMeta.setBlockData(CraftBlockData.fromString(null, "minecraft:chest[waterlogged=true]"));
-        assertThat(itemMeta.getBlockData(Material.CHEST), is(CraftBlockData.fromString(null, "minecraft:chest[waterlogged=true]")));
+        itemMeta.setBlockData(CraftBlockData.newData(null, "minecraft:chest[waterlogged=true]"));
+        assertThat(itemMeta.getBlockData(Material.CHEST), is(CraftBlockData.newData(null, "minecraft:chest[waterlogged=true]")));
     }
 
     @Test

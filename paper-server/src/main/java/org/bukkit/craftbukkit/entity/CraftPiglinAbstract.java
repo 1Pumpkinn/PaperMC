@@ -53,8 +53,8 @@ public class CraftPiglinAbstract extends CraftMonster implements PiglinAbstract 
     }
 
     @Override
-    public void setBaby(boolean baby) {
-        CraftAgeable.setBaby(this.getHandle(), baby);
+    public void setBaby(boolean flag) {
+        this.getHandle().setBaby(flag);
     }
 
     @Override
@@ -63,12 +63,12 @@ public class CraftPiglinAbstract extends CraftMonster implements PiglinAbstract 
     }
 
     @Override
-    public void setAge(int age) {
-        this.getHandle().setBaby(age < 0);
+    public void setAge(int i) {
+        this.getHandle().setBaby(i < 0);
     }
 
     @Override
-    public void setAgeLock(boolean lock) {
+    public void setAgeLock(boolean b) {
     }
 
     @Override
@@ -78,12 +78,12 @@ public class CraftPiglinAbstract extends CraftMonster implements PiglinAbstract 
 
     @Override
     public void setBaby() {
-        CraftAgeable.setBaby(this.getHandle(), true);
+        this.getHandle().setBaby(true);
     }
 
     @Override
     public void setAdult() {
-        CraftAgeable.setBaby(this.getHandle(), false);
+        this.getHandle().setBaby(false);
     }
 
     @Override

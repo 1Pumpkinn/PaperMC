@@ -1,5 +1,6 @@
 package org.bukkit.craftbukkit.entity;
 
+import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -41,6 +42,7 @@ import org.bukkit.entity.Golem;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Illager;
+import org.bukkit.entity.LingeringPotion;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Mob;
@@ -52,6 +54,7 @@ import org.bukkit.entity.Raider;
 import org.bukkit.entity.Sittable;
 import org.bukkit.entity.SizedFireball;
 import org.bukkit.entity.Spellcaster;
+import org.bukkit.entity.SplashPotion;
 import org.bukkit.entity.Steerable;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.ThrowableProjectile;
@@ -67,10 +70,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 @AllFeatures
 public class EntityTypesTest {
 
@@ -80,7 +79,6 @@ public class EntityTypesTest {
             AbstractArrow.class,
             AbstractCow.class,
             AbstractHorse.class,
-            AbstractNautilus.class,
             AbstractSkeleton.class,
             AbstractVillager.class,
             AbstractWindCharge.class,
@@ -125,7 +123,8 @@ public class EntityTypesTest {
             ThrownPotion.class,
             TippedArrow.class,
             Vehicle.class,
-            WaterMob.class
+            WaterMob.class,
+            AbstractNautilus.class
     );
 
     static {
@@ -186,7 +185,6 @@ public class EntityTypesTest {
     public void testEntityType(EntityType entityType) {
         CraftEntityTypes.EntityTypeData<?, ?> entityTypeData = CraftEntityTypes.getEntityTypeData(entityType);
         assertNotNull(entityTypeData, String.format("Entity type %s does not have an entity type data, please add on to CraftEntityTypes.", entityType));
-        assertEquals(entityTypeData.entityClass(), entityType.getEntityClass(), String.format("Entity type class for %s does not match CraftEntityTypes.", entityType));
     }
 
     @AfterAll

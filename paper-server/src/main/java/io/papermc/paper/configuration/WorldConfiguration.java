@@ -477,12 +477,6 @@ public class WorldConfiguration extends ConfigurationPart {
     public class UnsupportedSettings extends ConfigurationPart {
         public boolean fixInvulnerableEndCrystalExploit = true;
         public boolean disableWorldTickingWhenEmpty = false;
-        public Ticking ticking;
-
-        public class Ticking extends ConfigurationPart {
-            public boolean chunks = true;
-            public boolean blockEntities = true;
-        }
     }
 
     public Hopper hopper;
